@@ -1,484 +1,400 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Silvera</title>
+<title>OSINT Sorgu Paneli</title>
 <style>
 :root {
-  --bg-primary: #0f0f11;
-  --bg-secondary: #18181b;
-  --bg-tertiary: #222227;
-  --bg-hover: #2a2a30;
-  --bg-input: #1c1c21;
-  --border: #2e2e36;
-  --border-light: #3a3a44;
+  --bg: #0a0a0f;
+  --panel: #12121a;
+  --border: #2a2a3a;
+  --input-bg: #1a1a24;
   --accent: #7c6af7;
-  --accent-hover: #9080ff;
-  --accent-dim: rgba(124,106,247,0.12);
-  --text-primary: #f0f0f5;
-  --text-secondary: #9090a8;
-  --text-muted: #5c5c70;
-  --user-bubble: #1e1b3a;
-  --user-bubble-border: #3a3258;
-  --assistant-bubble: #18181b;
-  --sidebar-w: 260px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  --t: 0.18s ease;
+  --text: #e0e0f0;
+  --text-dim: #6a6a82;
+  --success: #5fdb7a;
+  --error: #db5f6a;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font);font-size:15px;line-height:1.6;overflow:hidden}
-button{font-family:var(--font)}
-
-/* APP */
-.app{display:flex;height:100vh;width:100vw;overflow:hidden}
-
-/* SIDEBAR */
-.sidebar{width:var(--sidebar-w);background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:transform var(--t),width var(--t);z-index:200;overflow:hidden}
-.sidebar.collapsed{width:0;transform:translateX(calc(-1 * var(--sidebar-w)))}
-.sb-header{padding:14px 12px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
-.logo{display:flex;align-items:center;gap:9px;flex:1;min-width:0}
-.logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-name{font-size:14px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.new-btn{width:30px;height:30px;background:none;border:1px solid var(--border-light);border-radius:var(--radius-sm);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--t),color var(--t);flex-shrink:0}
-.new-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
-.sb-search{padding:10px 12px;flex-shrink:0}
-.search-wrap{position:relative}
-.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none}
-.search-input{width:100%;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px 7px 32px;font-size:13px;color:var(--text-primary);outline:none;transition:border-color var(--t)}
-.search-input::placeholder{color:var(--text-muted)}
-.search-input:focus{border-color:var(--accent)}
-.sb-label{padding:6px 12px 3px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
-.conv-list{flex:1;overflow-y:auto;padding:4px 8px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-.conv-list::-webkit-scrollbar{width:4px}
-.conv-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.conv-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;transition:background var(--t);user-select:none}
-.conv-item:hover{background:var(--bg-hover)}
-.conv-item.active{background:var(--accent-dim)}
-.conv-item svg{color:var(--text-muted);flex-shrink:0}
-.conv-item.active svg{color:var(--accent)}
-.conv-title{font-size:13px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
-.conv-item.active .conv-title{color:var(--text-primary)}
-.sb-footer{border-top:1px solid var(--border);padding:10px 8px;flex-shrink:0}
-.profile-btn{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:var(--radius-sm);background:none;border:none;cursor:pointer;transition:background var(--t);text-align:left}
-.profile-btn:hover{background:var(--bg-hover)}
-.avatar{width:32px;height:32px;background:linear-gradient(135deg,#5b4fcf,#7c6af7);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0}
-.pname{font-size:13px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pplan{font-size:11px;color:var(--text-muted)}
-
-/* MAIN */
-.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
-
-/* TOPBAR */
-.topbar{height:54px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;background:var(--bg-primary)}
-.toggle-btn,.icon-btn{width:34px;height:34px;background:none;border:none;color:var(--text-secondary);cursor:pointer;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;transition:background var(--t),color var(--t)}
-.toggle-btn:hover,.icon-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
-.tb-title{font-size:14px;font-weight:500;color:var(--text-primary);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tb-actions{display:flex;align-items:center;gap:4px}
-
-/* MESSAGES */
-.msgs-area{flex:1;overflow-y:auto;padding:24px 0;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-.msgs-area::-webkit-scrollbar{width:4px}
-.msgs-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.msgs-inner{max-width:740px;margin:0 auto;padding:0 20px;display:flex;flex-direction:column;gap:8px}
-
-/* WELCOME */
-.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;text-align:center;padding:40px 20px}
-.welcome-logo{width:56px;height:56px;background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 0 40px rgba(124,106,247,.25)}
-.welcome h1{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
-.welcome p{font-size:15px;color:var(--text-secondary);max-width:380px;line-height:1.55}
-.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:28px}
-.chip{background:var(--bg-secondary);border:1px solid var(--border);border-radius:99px;padding:7px 14px;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:background var(--t),border-color var(--t),color var(--t);white-space:nowrap}
-.chip:hover{background:var(--bg-hover);border-color:var(--border-light);color:var(--text-primary)}
-
-/* MESSAGES */
-.msg-row{display:flex;align-items:flex-start;gap:12px;animation:fadeUp .2s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.msg-row.user{flex-direction:row-reverse}
-.msg-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;margin-top:2px}
-.msg-av.assistant{background:linear-gradient(135deg,var(--accent),#a78bfa);color:#fff}
-.msg-av.user{background:linear-gradient(135deg,#5b4fcf,#7c6af7);color:#fff}
-.bubble{max-width:min(76%,600px);border-radius:var(--radius-lg);padding:10px 14px;font-size:14.5px;line-height:1.65;word-break:normal;overflow-wrap:break-word;white-space:pre-wrap}
-.msg-row.user .bubble{background:var(--user-bubble);border:1px solid var(--user-bubble-border);border-bottom-right-radius:4px}
-.msg-row.assistant .bubble{background:var(--assistant-bubble);border:1px solid var(--border);border-bottom-left-radius:4px}
-.bubble p{margin-bottom:.6em}
-.bubble p:last-child{margin-bottom:0}
-.bubble ul,.bubble ol{padding-left:1.4em;margin-bottom:.6em}
-.bubble li{margin-bottom:.2em}
-.bubble h1,.bubble h2,.bubble h3{font-weight:600;margin:.6em 0 .3em;line-height:1.3}
-.bubble h1{font-size:1.2em}.bubble h2{font-size:1.1em}.bubble h3{font-size:1em}
-.bubble code{font-family:var(--mono);font-size:.84em;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:4px;padding:1px 5px}
-.bubble pre{background:#13131a;border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;overflow-x:auto;margin:8px 0;font-size:13px;line-height:1.55;white-space:pre}
-.bubble pre code{background:none;border:none;padding:0;font-size:inherit}
-.bubble table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}
-.bubble th,.bubble td{border:1px solid var(--border);padding:6px 10px;text-align:left}
-.bubble th{background:var(--bg-tertiary);font-weight:600}
-.bubble a{color:var(--accent);text-decoration:none}
-.bubble a:hover{text-decoration:underline}
-.bubble blockquote{border-left:3px solid var(--accent);padding-left:12px;color:var(--text-secondary);margin:6px 0}
-.bubble hr{border:none;border-top:1px solid var(--border);margin:10px 0}
-
-/* TYPING */
-.typing-row{display:flex;align-items:flex-start;gap:12px;animation:fadeUp .2s ease}
-.typing-dots{display:flex;gap:4px;padding:12px 16px;background:var(--assistant-bubble);border:1px solid var(--border);border-radius:var(--radius-lg);border-bottom-left-radius:4px}
-.dot{width:6px;height:6px;background:var(--text-muted);border-radius:50%;animation:bounce 1.2s ease-in-out infinite}
-.dot:nth-child(2){animation-delay:.2s}
-.dot:nth-child(3){animation-delay:.4s}
-@keyframes bounce{0%,80%,100%{transform:scale(.7);opacity:.5}40%{transform:scale(1);opacity:1}}
-
-/* COMPOSER */
-.composer{border-top:1px solid var(--border);padding:14px 20px 18px;background:var(--bg-primary);flex-shrink:0}
-.composer-inner{max-width:740px;margin:0 auto}
-.composer-box{background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-xl);transition:border-color var(--t),box-shadow var(--t);overflow:hidden}
-.composer-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,106,247,.1)}
-.composer-top{display:flex;align-items:flex-end;gap:8px;padding:12px 14px}
-#chat-input{flex:1;background:none;border:none;outline:none;color:var(--text-primary);font-size:14.5px;font-family:var(--font);line-height:1.55;resize:none;max-height:200px;min-height:22px;overflow-y:auto;scrollbar-width:thin;word-break:normal;overflow-wrap:break-word;white-space:pre-wrap}
-#chat-input::placeholder{color:var(--text-muted)}
-.send-btn{width:34px;height:34px;background:var(--accent);border:none;border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--t),transform .1s}
-.send-btn:hover{background:var(--accent-hover)}
-.send-btn:active{transform:scale(.93)}
-.send-btn:disabled{background:var(--bg-tertiary);color:var(--text-muted);cursor:not-allowed}
-.composer-foot{display:flex;align-items:center;justify-content:space-between;padding:6px 14px 10px;border-top:1px solid var(--border)}
-.tool-btns{display:flex;gap:2px}
-.tool-btn{width:30px;height:30px;background:none;border:none;color:var(--text-muted);cursor:pointer;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;transition:background var(--t),color var(--t)}
-.tool-btn:hover{background:var(--bg-hover);color:var(--text-secondary)}
-.hint{font-size:11px;color:var(--text-muted)}
-
-/* OVERLAY */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;backdrop-filter:blur(2px)}
-
-/* MOBILE */
-@media(max-width:700px){
-  .sidebar{position:fixed;top:0;left:0;height:100vh;transform:translateX(calc(-1 * var(--sidebar-w)));width:var(--sidebar-w) !important}
-  .sidebar.open{transform:translateX(0)}
-  .overlay.vis{display:block}
-  .msgs-inner{padding:0 12px}
-  .bubble{max-width:88%;font-size:14px}
-  .composer{padding:10px 12px 16px}
-  .hint{display:none}
-}
-@media(min-width:701px){
-  .sidebar.collapsed{width:0;transform:none;overflow:hidden}
-}
-*:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{width:100%;max-width:800px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 0 60px rgba(124,106,247,.08)}
+h1{font-size:22px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+h1 small{font-size:13px;font-weight:400;color:var(--text-dim);margin-left:auto}
+.tabs{display:flex;gap:6px;margin:16px 0 20px;flex-wrap:wrap}
+.tab{background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:8px 16px;color:var(--text-dim);cursor:pointer;transition:.2s;font-size:13px;font-weight:500}
+.tab:hover{background:var(--border);color:var(--text)}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.panel{display:none;flex-direction:column;gap:14px}
+.panel.active{display:flex}
+label{font-size:13px;font-weight:500;color:var(--text-dim)}
+input,select{background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;width:100%;outline:none;transition:.2s}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,106,247,.15)}
+button.ara{background:var(--accent);border:none;border-radius:10px;padding:10px;font-weight:600;color:#fff;font-size:14px;cursor:pointer;transition:.2s;width:100%;margin-top:4px}
+button.ara:hover{background:#9080ff;transform:scale(1.01)}
+button.ara:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.result-box{background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:6px;min-height:60px;font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-all}
+.result-box .found{color:var(--success)}
+.result-box .notfound{color:var(--error)}
+.result-box .key{color:var(--text-dim)}
+.result-box .val{color:var(--text)}
+.loading{color:var(--text-dim);font-style:italic}
+.footer{margin-top:20px;font-size:12px;color:var(--text-dim);text-align:center;border-top:1px solid var(--border);padding-top:16px}
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="overlay" id="overlay"></div>
+<div class="container">
+  <h1>🔍 OSINT Sorgu <small>v2.0</small></h1>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sb-header">
-      <div class="logo">
-        <div class="logo-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-        </div>
-        <span class="logo-name">Silvera</span>
-      </div>
-      <button class="new-btn" id="new-btn" title="New chat" aria-label="New chat">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      </button>
-    </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="discord">Discord ID</button>
+    <button class="tab" data-tab="tc">TC</button>
+    <button class="tab" data-tab="tel">Numara</button>
+    <button class="tab" data-tab="adsoyad">Ad Soyad</button>
+    <button class="tab" data-tab="adsoyadil">Ad Soyad + İl/İlçe</button>
+  </div>
 
-    <div class="sb-search">
-      <div class="search-wrap">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-input" id="search-input" type="search" placeholder="Search..." aria-label="Search conversations">
-      </div>
-    </div>
+  <!-- Discord ID -->
+  <div class="panel active" id="panel-discord">
+    <label>Discord ID (17-18 haneli)</label>
+    <input type="text" id="discord-input" placeholder="Örn: 123456789012345678">
+    <button class="ara" onclick="sorgula('discord')">🔎 Sorgula</button>
+    <div class="result-box" id="result-discord"><span class="notfound">—</span></div>
+  </div>
 
-    <div class="sb-label">Recent</div>
-    <nav class="conv-list" id="conv-list" aria-label="Conversations"></nav>
+  <!-- TC -->
+  <div class="panel" id="panel-tc">
+    <label>TC Kimlik No</label>
+    <input type="text" id="tc-input" placeholder="Örn: 12345678901" maxlength="11">
+    <button class="ara" onclick="sorgula('tc')">🔎 Sorgula</button>
+    <div class="result-box" id="result-tc"><span class="notfound">—</span></div>
+  </div>
 
-    <div class="sb-footer">
-      <button class="profile-btn" aria-label="Settings">
-        <div class="avatar">U</div>
-        <div style="flex:1;min-width:0">
-          <div class="pname">User</div>
-          <div class="pplan">Free plan</div>
-        </div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 1 0 0 14.14"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-      </button>
-    </div>
-  </aside>
+  <!-- Telefon -->
+  <div class="panel" id="panel-tel">
+    <label>Telefon Numarası (başında 0 olmadan)</label>
+    <input type="text" id="tel-input" placeholder="Örn: 5551234567" maxlength="10">
+    <button class="ara" onclick="sorgula('tel')">🔎 Sorgula</button>
+    <div class="result-box" id="result-tel"><span class="notfound">—</span></div>
+  </div>
 
-  <main class="main">
-    <header class="topbar">
-      <button class="toggle-btn" id="toggle-btn" aria-label="Toggle sidebar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-      <span class="tb-title" id="tb-title">New conversation</span>
-      <div class="tb-actions">
-        <button class="icon-btn" aria-label="Share">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        </button>
-        <button class="icon-btn" aria-label="More options">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-        </button>
-      </div>
-    </header>
+  <!-- Ad Soyad -->
+  <div class="panel" id="panel-adsoyad">
+    <label>Ad ve Soyad</label>
+    <input type="text" id="adsoyad-input" placeholder="Örn: Ahmet Yılmaz">
+    <button class="ara" onclick="sorgula('adsoyad')">🔎 Sorgula</button>
+    <div class="result-box" id="result-adsoyad"><span class="notfound">—</span></div>
+  </div>
 
-    <div class="msgs-area" id="msgs-area" role="log" aria-live="polite">
-      <div class="msgs-inner" id="msgs-inner">
-        <div class="welcome" id="welcome">
-          <div class="welcome-logo">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          </div>
-          <h1>Silvera</h1>
-          <p>Your intelligent AI assistant. Ask anything, explore ideas, or get help with complex tasks.</p>
-          <div class="chips">
-            <button class="chip" data-p="Explain quantum computing in simple terms">Explain quantum computing</button>
-            <button class="chip" data-p="Write a Python script to sort a list of numbers">Write Python code</button>
-            <button class="chip" data-p="What are the best practices for REST APIs?">REST API best practices</button>
-            <button class="chip" data-p="Help me brainstorm startup ideas in the AI space">Brainstorm startup ideas</button>
-            <button class="chip" data-p="Summarize the concept of machine learning">Machine learning summary</button>
-            <button class="chip" data-p="How do I improve my writing skills?">Improve writing skills</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Ad Soyad + İl/İlçe -->
+  <div class="panel" id="panel-adsoyadil">
+    <label>Ad Soyad</label>
+    <input type="text" id="adsoyadil-input" placeholder="Örn: Ayşe Demir">
+    <label style="margin-top:6px;">İl / İlçe</label>
+    <input type="text" id="ililce-input" placeholder="Örn: İstanbul / Kadıköy">
+    <button class="ara" onclick="sorgula('adsoyadil')">🔎 Sorgula</button>
+    <div class="result-box" id="result-adsoyadil"><span class="notfound">—</span></div>
+  </div>
 
-    <div class="composer">
-      <div class="composer-inner">
-        <div class="composer-box">
-          <div class="composer-top">
-            <textarea id="chat-input" placeholder="Message Silvera..." rows="1" aria-label="Message input"></textarea>
-            <button class="send-btn" id="send-btn" aria-label="Send" disabled>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-            </button>
-          </div>
-          <div class="composer-foot">
-            <div class="tool-btns">
-              <button class="tool-btn" aria-label="Attach file">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-              </button>
-              <button class="tool-btn" aria-label="Search">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              </button>
-              <button class="tool-btn" aria-label="Code">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-              </button>
-            </div>
-            <span class="hint">Enter to send &middot; Shift+Enter for new line</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
+  <div class="footer">Sorgu sonuçları simüle edilmiş OSINT veritabanından alınır. Bulunamayan kayıtlar için "Bulunamadı" döner.</div>
 </div>
 
 <script>
-const CONFIG = {
-  API_KEY: "",
-  MODEL: "claude-sonnet-4-6"
+// --- TAB GEÇİŞİ ---
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + this.dataset.tab).classList.add('active');
+  });
+});
+
+// --- SAHTE VERİTABANI (OSINT SIMÜLASYONU) ---
+const veritabani = {
+  // Discord ID -> Kullanıcı
+  '123456789012345678': {
+    discord_id: '123456789012345678',
+    discord_username: 'xDarkLordx',
+    tc: '12345678901',
+    ad: 'Mehmet',
+    soyad: 'Kara',
+    baba_adi: 'Hasan',
+    anne_adi: 'Fatma',
+    baba_tc: '98765432109',
+    anne_tc: '87654321098',
+    ip: '192.168.1.100',
+    telefon: '5551234567',
+    il: 'Ankara',
+    ilce: 'Çankaya',
+    adres: 'Mebusevleri Mah. 123. Sok. No:45'
+  },
+  '987654321098765432': {
+    discord_id: '987654321098765432',
+    discord_username: 'shadow_queen',
+    tc: '98765432109',
+    ad: 'Zeynep',
+    soyad: 'Yıldız',
+    baba_adi: 'Ahmet',
+    anne_adi: 'Ayşe',
+    baba_tc: '12345678901',
+    anne_tc: '23456789012',
+    ip: '10.0.0.55',
+    telefon: '5559876543',
+    il: 'İstanbul',
+    ilce: 'Kadıköy',
+    adres: 'Caferağa Mah. Moda Cad. No:10'
+  },
+  // TC -> Kişi
+  '12345678901': {
+    tc: '12345678901',
+    ad: 'Mehmet',
+    soyad: 'Kara',
+    baba_adi: 'Hasan',
+    anne_adi: 'Fatma',
+    baba_tc: '98765432109',
+    anne_tc: '87654321098',
+    dogum_yili: '1985',
+    cinsiyet: 'Erkek',
+    il: 'Ankara',
+    ilce: 'Çankaya',
+    adres: 'Mebusevleri Mah. 123. Sok. No:45',
+    telefon: '5551234567',
+    anne_kizlik_soyadi: 'Demir'
+  },
+  '98765432109': {
+    tc: '98765432109',
+    ad: 'Zeynep',
+    soyad: 'Yıldız',
+    baba_adi: 'Ahmet',
+    anne_adi: 'Ayşe',
+    baba_tc: '12345678901',
+    anne_tc: '23456789012',
+    dogum_yili: '1992',
+    cinsiyet: 'Kadın',
+    il: 'İstanbul',
+    ilce: 'Kadıköy',
+    adres: 'Caferağa Mah. Moda Cad. No:10',
+    telefon: '5559876543',
+    anne_kizlik_soyadi: 'Kaya'
+  },
+  // Telefon -> Kişi
+  '5551234567': {
+    telefon: '5551234567',
+    ad: 'Mehmet',
+    soyad: 'Kara',
+    tc: '12345678901',
+    il: 'Ankara',
+    ilce: 'Çankaya',
+    operator: 'Turkcell',
+    hat_tipi: 'Fiziksel'
+  },
+  '5559876543': {
+    telefon: '5559876543',
+    ad: 'Zeynep',
+    soyad: 'Yıldız',
+    tc: '98765432109',
+    il: 'İstanbul',
+    ilce: 'Kadıköy',
+    operator: 'Vodafone',
+    hat_tipi: 'Fiziksel'
+  },
+  // Ad Soyad -> Kişi (basit)
+  'mehmet kara': {
+    ad: 'Mehmet',
+    soyad: 'Kara',
+    tc: '12345678901',
+    baba_adi: 'Hasan',
+    anne_adi: 'Fatma',
+    baba_tc: '98765432109',
+    anne_tc: '87654321098',
+    dogum_yili: '1985',
+    il: 'Ankara',
+    ilce: 'Çankaya',
+    telefon: '5551234567',
+    anne_kizlik_soyadi: 'Demir'
+  },
+  'zeynep yıldız': {
+    ad: 'Zeynep',
+    soyad: 'Yıldız',
+    tc: '98765432109',
+    baba_adi: 'Ahmet',
+    anne_adi: 'Ayşe',
+    baba_tc: '12345678901',
+    anne_tc: '23456789012',
+    dogum_yili: '1992',
+    il: 'İstanbul',
+    ilce: 'Kadıköy',
+    telefon: '5559876543',
+    anne_kizlik_soyadi: 'Kaya'
+  }
 };
 
-const IDENTITY_RE = /who are you|what ai are you|what model are you|who made you|who created you|who developed you|which company made you|what powers you/i;
-const IDENTITY_REPLY = "I am Silvera, created by YouTube The AI Algorithm.";
+// --- SORGULAMA FONKSİYONU ---
+function sorgula(tip) {
+  const resultBox = document.getElementById('result-' + tip);
+  let inputVal = '';
 
-const state = { convs: [], activeId: null, loading: false, sbOpen: window.innerWidth > 700 };
+  // Input değerini al ve normalize et
+  if (tip === 'discord') inputVal = document.getElementById('discord-input').value.trim();
+  else if (tip === 'tc') inputVal = document.getElementById('tc-input').value.trim();
+  else if (tip === 'tel') inputVal = document.getElementById('tel-input').value.trim();
+  else if (tip === 'adsoyad') inputVal = document.getElementById('adsoyad-input').value.trim().toLowerCase();
+  else if (tip === 'adsoyadil') {
+    const ad = document.getElementById('adsoyadil-input').value.trim().toLowerCase();
+    const il = document.getElementById('ililce-input').value.trim().toLowerCase();
+    inputVal = ad + '|' + il; // özel format
+  }
 
-const $ = id => document.getElementById(id);
-const sidebar   = $('sidebar');
-const overlay   = $('overlay');
-const convList  = $('conv-list');
-const msgsInner = $('msgs-inner');
-const msgsArea  = $('msgs-area');
-const welcome   = $('welcome');
-const input     = $('chat-input');
-const sendBtn   = $('send-btn');
-const tbTitle   = $('tb-title');
-const searchEl  = $('search-input');
-
-// SIDEBAR
-function setSB(open) {
-  const mob = window.innerWidth <= 700;
-  if (mob) { sidebar.classList.toggle('open', open); overlay.classList.toggle('vis', open); }
-  else { sidebar.classList.toggle('collapsed', !open); }
-  state.sbOpen = open;
-}
-$('toggle-btn').addEventListener('click', () => setSB(!state.sbOpen));
-overlay.addEventListener('click', () => setSB(false));
-window.addEventListener('resize', () => {
-  if (window.innerWidth > 700) { overlay.classList.remove('vis'); sidebar.classList.remove('open'); sidebar.classList.toggle('collapsed', !state.sbOpen); }
-});
-
-// CONVS
-function newConv(title) {
-  const id = Date.now().toString();
-  const c = { id, title: title || 'New conversation', msgs: [] };
-  state.convs.unshift(c);
-  state.activeId = id;
-  renderConvList();
-  renderMsgs();
-  tbTitle.textContent = c.title;
-  return c;
-}
-function getActive() { return state.convs.find(c => c.id === state.activeId); }
-
-function renderConvList(q = '') {
-  const list = q ? state.convs.filter(c => c.title.toLowerCase().includes(q.toLowerCase())) : state.convs;
-  convList.innerHTML = list.map(c => `
-    <div class="conv-item${c.id === state.activeId ? ' active' : ''}" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(c.title)}">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      <span class="conv-title">${esc(c.title)}</span>
-    </div>`).join('');
-  convList.querySelectorAll('.conv-item').forEach(el => {
-    const go = () => {
-      state.activeId = el.dataset.id;
-      renderConvList(q);
-      renderMsgs();
-      const cv = getActive();
-      tbTitle.textContent = cv ? cv.title : 'New conversation';
-      if (window.innerWidth <= 700) setSB(false);
-    };
-    el.addEventListener('click', go);
-    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
-  });
-}
-searchEl.addEventListener('input', e => renderConvList(e.target.value));
-$('new-btn').addEventListener('click', () => { state.activeId = null; tbTitle.textContent = 'New conversation'; renderConvList(); renderMsgs(); input.focus(); });
-
-// MARKDOWN
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function md(text) {
-  text = text.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '').replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '').trim();
-  let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, (_,l,c) => `<pre><code>${c.trimEnd()}</code></pre>`);
-  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-  s = s.replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>');
-  s = s.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');
-  s = s.replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>');
-  s = s.replace(/^---$/gm,'<hr>');
-  s = s.replace(/^[ \t]*[*\-+] (.+)$/gm,'<li>$1</li>');
-  s = s.replace(/(<li>[\s\S]+?<\/li>)/g, m => '<ul>'+m+'</ul>');
-  s = s.replace(/<\/ul>\s*<ul>/g,'');
-  s = s.replace(/^\d+\. (.+)$/gm,'<OLI>$1</OLI>');
-  s = s.replace(/(<OLI>[\s\S]+?<\/OLI>)/g, m => '<ol>'+m.replace(/<OLI>/g,'<li>').replace(/<\/OLI>/g,'</li>')+'</ol>');
-  s = s.replace(/<\/ol>\s*<ol>/g,'');
-  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  s = s.split(/\n\n+/).map(b => {
-    const t = b.trim();
-    if (!t) return '';
-    if (/^<(h[1-6]|ul|ol|pre|blockquote|hr|table)/.test(t)) return t;
-    return '<p>' + t.replace(/\n/g,'<br>') + '</p>';
-  }).join('');
-  return s;
-}
-
-// RENDER
-function renderMsgs() {
-  const cv = getActive();
-  msgsInner.querySelectorAll('.msg-row,.typing-row').forEach(e => e.remove());
-  if (!cv) { welcome.style.display = ''; return; }
-  welcome.style.display = 'none';
-  cv.msgs.forEach(m => msgsInner.appendChild(makeMsg(m.role, m.content)));
-  if (state.loading) msgsInner.appendChild(makeTyping());
-  scroll();
-}
-
-function makeMsg(role, content) {
-  const row = document.createElement('div');
-  row.className = `msg-row ${role}`;
-  const av = document.createElement('div');
-  av.className = `msg-av ${role}`;
-  av.textContent = role === 'user' ? 'U' : 'A';
-  av.setAttribute('aria-label', role === 'user' ? 'You' : 'Silvera');
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  if (role === 'assistant') { bubble.innerHTML = md(content); }
-  else { bubble.textContent = content; bubble.style.whiteSpace = 'pre-wrap'; }
-  row.appendChild(av);
-  row.appendChild(bubble);
-  return row;
-}
-
-function makeTyping() {
-  const row = document.createElement('div');
-  row.className = 'typing-row';
-  row.setAttribute('aria-label', 'Silvera is thinking');
-  row.innerHTML = `<div class="msg-av assistant" aria-hidden="true">A</div><div class="typing-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>`;
-  return row;
-}
-
-function scroll() { requestAnimationFrame(() => { msgsArea.scrollTop = msgsArea.scrollHeight; }); }
-
-// INPUT
-input.addEventListener('input', () => {
-  input.style.height = 'auto';
-  input.style.height = Math.min(input.scrollHeight, 200) + 'px';
-  sendBtn.disabled = !input.value.trim();
-});
-
-// SEND
-async function send(text) {
-  text = text.trim();
-  if (!text || state.loading) return;
-  let cv = getActive();
-  if (!cv) { cv = newConv(text.length > 42 ? text.slice(0,42) + '\u2026' : text); }
-  else if (cv.msgs.length === 0) { cv.title = text.length > 42 ? text.slice(0,42) + '\u2026' : text; tbTitle.textContent = cv.title; }
-  cv.msgs.push({ role: 'user', content: text });
-  state.loading = true;
-  renderMsgs();
-  renderConvList();
-  input.value = '';
-  input.style.height = 'auto';
-  sendBtn.disabled = true;
-
-  if (IDENTITY_RE.test(text)) {
-    await new Promise(r => setTimeout(r, 500));
-    state.loading = false;
-    cv.msgs.push({ role: 'assistant', content: IDENTITY_REPLY });
-    renderMsgs();
-    renderConvList();
+  if (!inputVal || inputVal === '|') {
+    resultBox.innerHTML = '<span class="notfound">❌ Lütfen geçerli bir sorgu girin.</span>';
     return;
   }
 
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CONFIG.API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: CONFIG.MODEL,
-        max_tokens: 2048,
-        messages: cv.msgs.map(m => ({ role: m.role, content: m.content }))
-      })
-    });
-    if (!res.ok) throw new Error('err');
-    const data = await res.json();
-    let reply = (data?.content?.[0]?.text || '').replace(/<thinking>[\s\S]*?<\/thinking>/gi,'').replace(/<reasoning>[\s\S]*?<\/reasoning>/gi,'').trim();
-    if (!reply) throw new Error('empty');
-    state.loading = false;
-    cv.msgs.push({ role: 'assistant', content: reply });
-  } catch {
-    state.loading = false;
-    cv.msgs.push({ role: 'assistant', content: "Sorry, I couldn\u2019t process that request right now. Please try again." });
-  }
-  renderMsgs();
-  renderConvList();
+  resultBox.innerHTML = '<span class="loading">⏳ Sorgulanıyor...</span>';
+
+  // Simülasyon gecikmesi (gerçekçi olsun diye)
+  setTimeout(() => {
+    let sonuc = null;
+    let bulundu = false;
+
+    if (tip === 'discord') {
+      sonuc = veritabani[inputVal];
+      if (sonuc) {
+        bulundu = true;
+        resultBox.innerHTML = `
+          <span class="found">✅ Kullanıcı bulundu!</span>
+          <span class="key">Discord ID:</span> <span class="val">${sonuc.discord_id}</span>
+          <span class="key">Kullanıcı adı:</span> <span class="val">${sonuc.discord_username}</span>
+          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
+          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
+          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
+          <span class="key">Baba adı:</span> <span class="val">${sonuc.baba_adi}</span>
+          <span class="key">Anne adı:</span> <span class="val">${sonuc.anne_adi}</span>
+          <span class="key">Baba TC:</span> <span class="val">${sonuc.baba_tc}</span>
+          <span class="key">Anne TC:</span> <span class="val">${sonuc.anne_tc}</span>
+          <span class="key">IP:</span> <span class="val">${sonuc.ip}</span>
+          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
+          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
+          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
+          <span class="key">Adres:</span> <span class="val">${sonuc.adres}</span>
+        `;
+      }
+    }
+    else if (tip === 'tc') {
+      sonuc = veritabani[inputVal];
+      if (sonuc) {
+        bulundu = true;
+        resultBox.innerHTML = `
+          <span class="found">✅ TC kayıtlı!</span>
+          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
+          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
+          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
+          <span class="key">Baba adı:</span> <span class="val">${sonuc.baba_adi}</span>
+          <span class="key">Anne adı:</span> <span class="val">${sonuc.anne_adi}</span>
+          <span class="key">Baba TC:</span> <span class="val">${sonuc.baba_tc}</span>
+          <span class="key">Anne TC:</span> <span class="val">${sonuc.anne_tc}</span>
+          <span class="key">Doğum yılı:</span> <span class="val">${sonuc.dogum_yili}</span>
+          <span class="key">Cinsiyet:</span> <span class="val">${sonuc.cinsiyet}</span>
+          <span class="key">Anne kızlık soyadı:</span> <span class="val">${sonuc.anne_kizlik_soyadi}</span>
+          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
+          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
+          <span class="key">Adres:</span> <span class="val">${sonuc.adres}</span>
+          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
+        `;
+      }
+    }
+    else if (tip === 'tel') {
+      sonuc = veritabani[inputVal];
+      if (sonuc) {
+        bulundu = true;
+        resultBox.innerHTML = `
+          <span class="found">✅ Numara kayıtlı!</span>
+          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
+          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
+          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
+          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
+          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
+          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
+          <span class="key">Operatör:</span> <span class="val">${sonuc.operator}</span>
+          <span class="key">Hat tipi:</span> <span class="val">${sonuc.hat_tipi}</span>
+        `;
+      }
+    }
+    else if (tip === 'adsoyad') {
+      sonuc = veritabani[inputVal];
+      if (sonuc) {
+        bulundu = true;
+        resultBox.innerHTML = `
+          <span class="found">✅ Kayıt bulundu!</span>
+          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
+          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
+          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
+          <span class="key">Baba adı:</span> <span class="val">${sonuc.baba_adi}</span>
+          <span class="key">Anne adı:</span> <span class="val">${sonuc.anne_adi}</span>
+          <span class="key">Baba TC:</span> <span class="val">${sonuc.baba_tc}</span>
+          <span class="key">Anne TC:</span> <span class="val">${sonuc.anne_tc}</span>
+          <span class="key">Doğum yılı:</span> <span class="val">${sonuc.dogum_yili}</span>
+          <span class="key">Anne kızlık soyadı:</span> <span class="val">${sonuc.anne_kizlik_soyadi}</span>
+          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
+          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
+          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
+        `;
+      }
+    }
+    else if (tip === 'adsoyadil') {
+      const [ad, il] = inputVal.split('|');
+      // Veritabanında ad+soyad ve il/ilçe eşleşmesi kontrolü
+      for (let key in veritabani) {
+        const v = veritabani[key];
+        if (v.ad && v.soyad && v.il && v.ilce) {
+          const fullAd = (v.ad + ' ' + v.soyad).toLowerCase();
+          const fullIl = (v.il + ' ' + v.ilce).toLowerCase();
+          if (fullAd === ad && fullIl === il) {
+            sonuc = v;
+            bulundu = true;
+            break;
+          }
+        }
+      }
+      if (sonuc) {
+        resultBox.innerHTML = `
+          <span class="found">✅ Kişi bulundu!</span>
+          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
+          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
+          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
+          <span class="key">Baba adı:</span> <span class="val">${sonuc.baba_adi}</span>
+          <span class="key">Anne adı:</span> <span class="val">${sonuc.anne_adi}</span>
+          <span class="key">Baba TC:</span> <span class="val">${sonuc.baba_tc}</span>
+          <span class="key">Anne TC:</span> <span class="val">${sonuc.anne_tc}</span>
+          <span class="key">Doğum yılı:</span> <span class="val">${sonuc.dogum_yili}</span>
+          <span class="key">Anne kızlık soyadı:</span> <span class="val">${sonuc.anne_kizlik_soyadi}</span>
+          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
+          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
+          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
+          <span class="key">Adres:</span> <span class="val">${sonuc.adres}</span>
+        `;
+      }
+    }
+
+    if (!bulundu) {
+      resultBox.innerHTML = '<span class="notfound">❌ Bulunamadı. Bu veri tabanımızda kayıtlı değil.</span>';
+    }
+  }, 800);
 }
 
-sendBtn.addEventListener('click', () => send(input.value));
-input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input.value); } });
-
-document.querySelectorAll('.chip').forEach(c => {
-  c.addEventListener('click', () => { const p = c.dataset.p; input.value = p; input.dispatchEvent(new Event('input')); send(p); });
+// Enter ile gönderme
+document.querySelectorAll('input').forEach(inp => {
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const panel = inp.closest('.panel');
+      if (panel) {
+        const btn = panel.querySelector('.ara');
+        if (btn) btn.click();
+      }
+    }
+  });
 });
-
-renderConvList();
-renderMsgs();
-if (window.innerWidth <= 700) setSB(false);
 </script>
 </body>
 </html>
