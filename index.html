@@ -1,400 +1,109 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OSINT Sorgu Paneli</title>
-<style>
-:root {
-  --bg: #0a0a0f;
-  --panel: #12121a;
-  --border: #2a2a3a;
-  --input-bg: #1a1a24;
-  --accent: #7c6af7;
-  --text: #e0e0f0;
-  --text-dim: #6a6a82;
-  --success: #5fdb7a;
-  --error: #db5f6a;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.container{width:100%;max-width:800px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 0 60px rgba(124,106,247,.08)}
-h1{font-size:22px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:10px}
-h1 small{font-size:13px;font-weight:400;color:var(--text-dim);margin-left:auto}
-.tabs{display:flex;gap:6px;margin:16px 0 20px;flex-wrap:wrap}
-.tab{background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:8px 16px;color:var(--text-dim);cursor:pointer;transition:.2s;font-size:13px;font-weight:500}
-.tab:hover{background:var(--border);color:var(--text)}
-.tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.panel{display:none;flex-direction:column;gap:14px}
-.panel.active{display:flex}
-label{font-size:13px;font-weight:500;color:var(--text-dim)}
-input,select{background:var(--input-bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;width:100%;outline:none;transition:.2s}
-input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,106,247,.15)}
-button.ara{background:var(--accent);border:none;border-radius:10px;padding:10px;font-weight:600;color:#fff;font-size:14px;cursor:pointer;transition:.2s;width:100%;margin-top:4px}
-button.ara:hover{background:#9080ff;transform:scale(1.01)}
-button.ara:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.result-box{background:var(--input-bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:6px;min-height:60px;font-size:14px;line-height:1.7;white-space:pre-wrap;word-break:break-all}
-.result-box .found{color:var(--success)}
-.result-box .notfound{color:var(--error)}
-.result-box .key{color:var(--text-dim)}
-.result-box .val{color:var(--text)}
-.loading{color:var(--text-dim);font-style:italic}
-.footer{margin-top:20px;font-size:12px;color:var(--text-dim);text-align:center;border-top:1px solid var(--border);padding-top:16px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT PANEL - GitHub Actions</title>
+    <style>
+        body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, sans-serif; padding: 20px; }
+        h1 { color: #58a6ff; text-align: center; }
+        input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #30363d; background: #161b22; color: #fff; font-size: 16px; }
+        button { background: #238636; cursor: pointer; font-weight: bold; }
+        button:hover { background: #2ea043; }
+        button.red { background: #da3633; }
+        button.blue { background: #1f6feb; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
+        .grid button { font-size: 13px; padding: 10px; }
+        #output { background: #161b22; padding: 15px; border-radius: 8px; margin-top: 15px; max-height: 300px; overflow-y: auto; font-size: 13px; white-space: pre-wrap; display: none; }
+    </style>
 </head>
 <body>
-<div class="container">
-  <h1>🔍 OSINT Sorgu <small>v2.0</small></h1>
+    <h1>🔍 DISCORD OSINT PANEL</h1>
+    
+    <input type="text" id="did" placeholder="Discord ID girin" inputmode="numeric">
+    <input type="text" id="user" placeholder="Kullanıcı adı (varsa)">
+    <input type="text" id="email" placeholder="Email (varsa)">
+    
+    <button onclick="scanAll()">🚀 TÜM TARAMALARI BAŞLAT</button>
+    <button class="blue" onclick="triggerGitHubActions()">⚡ GitHub Actions ile Tara</button>
+    
+    <div class="grid">
+        <button onclick="openUrl('discord.id')">Discord.id</button>
+        <button onclick="openUrl('discordlookup')">DiscordLookup</button>
+        <button onclick="openUrl('dehashed')">Dehashed</button>
+        <button onclick="openUrl('snusbase')">Snusbase</button>
+        <button onclick="openUrl('intelx')">IntelX</button>
+        <button onclick="openUrl('hibp')">HIBP</button>
+        <button onclick="openUrl('whatsmyname')">WhatsMyName</button>
+        <button onclick="openUrl('epieos')">Epieos</button>
+        <button onclick="openUrl('leakcheck')">LeakCheck</button>
+        <button onclick="openUrl('breachdirectory')">BreachDirectory</button>
+        <button onclick="openUrl('sherlock')">Sherlock</button>
+        <button onclick="openUrl('maigret')">Maigret</button>
+    </div>
+    
+    <div id="output"></div>
 
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-tab="discord">Discord ID</button>
-    <button class="tab" data-tab="tc">TC</button>
-    <button class="tab" data-tab="tel">Numara</button>
-    <button class="tab" data-tab="adsoyad">Ad Soyad</button>
-    <button class="tab" data-tab="adsoyadil">Ad Soyad + İl/İlçe</button>
-  </div>
-
-  <!-- Discord ID -->
-  <div class="panel active" id="panel-discord">
-    <label>Discord ID (17-18 haneli)</label>
-    <input type="text" id="discord-input" placeholder="Örn: 123456789012345678">
-    <button class="ara" onclick="sorgula('discord')">🔎 Sorgula</button>
-    <div class="result-box" id="result-discord"><span class="notfound">—</span></div>
-  </div>
-
-  <!-- TC -->
-  <div class="panel" id="panel-tc">
-    <label>TC Kimlik No</label>
-    <input type="text" id="tc-input" placeholder="Örn: 12345678901" maxlength="11">
-    <button class="ara" onclick="sorgula('tc')">🔎 Sorgula</button>
-    <div class="result-box" id="result-tc"><span class="notfound">—</span></div>
-  </div>
-
-  <!-- Telefon -->
-  <div class="panel" id="panel-tel">
-    <label>Telefon Numarası (başında 0 olmadan)</label>
-    <input type="text" id="tel-input" placeholder="Örn: 5551234567" maxlength="10">
-    <button class="ara" onclick="sorgula('tel')">🔎 Sorgula</button>
-    <div class="result-box" id="result-tel"><span class="notfound">—</span></div>
-  </div>
-
-  <!-- Ad Soyad -->
-  <div class="panel" id="panel-adsoyad">
-    <label>Ad ve Soyad</label>
-    <input type="text" id="adsoyad-input" placeholder="Örn: Ahmet Yılmaz">
-    <button class="ara" onclick="sorgula('adsoyad')">🔎 Sorgula</button>
-    <div class="result-box" id="result-adsoyad"><span class="notfound">—</span></div>
-  </div>
-
-  <!-- Ad Soyad + İl/İlçe -->
-  <div class="panel" id="panel-adsoyadil">
-    <label>Ad Soyad</label>
-    <input type="text" id="adsoyadil-input" placeholder="Örn: Ayşe Demir">
-    <label style="margin-top:6px;">İl / İlçe</label>
-    <input type="text" id="ililce-input" placeholder="Örn: İstanbul / Kadıköy">
-    <button class="ara" onclick="sorgula('adsoyadil')">🔎 Sorgula</button>
-    <div class="result-box" id="result-adsoyadil"><span class="notfound">—</span></div>
-  </div>
-
-  <div class="footer">Sorgu sonuçları simüle edilmiş OSINT veritabanından alınır. Bulunamayan kayıtlar için "Bulunamadı" döner.</div>
-</div>
-
-<script>
-// --- TAB GEÇİŞİ ---
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', function() {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    this.classList.add('active');
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    document.getElementById('panel-' + this.dataset.tab).classList.add('active');
-  });
-});
-
-// --- SAHTE VERİTABANI (OSINT SIMÜLASYONU) ---
-const veritabani = {
-  // Discord ID -> Kullanıcı
-  '123456789012345678': {
-    discord_id: '123456789012345678',
-    discord_username: 'xDarkLordx',
-    tc: '12345678901',
-    ad: 'Mehmet',
-    soyad: 'Kara',
-    baba_adi: 'Hasan',
-    anne_adi: 'Fatma',
-    baba_tc: '98765432109',
-    anne_tc: '87654321098',
-    ip: '192.168.1.100',
-    telefon: '5551234567',
-    il: 'Ankara',
-    ilce: 'Çankaya',
-    adres: 'Mebusevleri Mah. 123. Sok. No:45'
-  },
-  '987654321098765432': {
-    discord_id: '987654321098765432',
-    discord_username: 'shadow_queen',
-    tc: '98765432109',
-    ad: 'Zeynep',
-    soyad: 'Yıldız',
-    baba_adi: 'Ahmet',
-    anne_adi: 'Ayşe',
-    baba_tc: '12345678901',
-    anne_tc: '23456789012',
-    ip: '10.0.0.55',
-    telefon: '5559876543',
-    il: 'İstanbul',
-    ilce: 'Kadıköy',
-    adres: 'Caferağa Mah. Moda Cad. No:10'
-  },
-  // TC -> Kişi
-  '12345678901': {
-    tc: '12345678901',
-    ad: 'Mehmet',
-    soyad: 'Kara',
-    baba_adi: 'Hasan',
-    anne_adi: 'Fatma',
-    baba_tc: '98765432109',
-    anne_tc: '87654321098',
-    dogum_yili: '1985',
-    cinsiyet: 'Erkek',
-    il: 'Ankara',
-    ilce: 'Çankaya',
-    adres: 'Mebusevleri Mah. 123. Sok. No:45',
-    telefon: '5551234567',
-    anne_kizlik_soyadi: 'Demir'
-  },
-  '98765432109': {
-    tc: '98765432109',
-    ad: 'Zeynep',
-    soyad: 'Yıldız',
-    baba_adi: 'Ahmet',
-    anne_adi: 'Ayşe',
-    baba_tc: '12345678901',
-    anne_tc: '23456789012',
-    dogum_yili: '1992',
-    cinsiyet: 'Kadın',
-    il: 'İstanbul',
-    ilce: 'Kadıköy',
-    adres: 'Caferağa Mah. Moda Cad. No:10',
-    telefon: '5559876543',
-    anne_kizlik_soyadi: 'Kaya'
-  },
-  // Telefon -> Kişi
-  '5551234567': {
-    telefon: '5551234567',
-    ad: 'Mehmet',
-    soyad: 'Kara',
-    tc: '12345678901',
-    il: 'Ankara',
-    ilce: 'Çankaya',
-    operator: 'Turkcell',
-    hat_tipi: 'Fiziksel'
-  },
-  '5559876543': {
-    telefon: '5559876543',
-    ad: 'Zeynep',
-    soyad: 'Yıldız',
-    tc: '98765432109',
-    il: 'İstanbul',
-    ilce: 'Kadıköy',
-    operator: 'Vodafone',
-    hat_tipi: 'Fiziksel'
-  },
-  // Ad Soyad -> Kişi (basit)
-  'mehmet kara': {
-    ad: 'Mehmet',
-    soyad: 'Kara',
-    tc: '12345678901',
-    baba_adi: 'Hasan',
-    anne_adi: 'Fatma',
-    baba_tc: '98765432109',
-    anne_tc: '87654321098',
-    dogum_yili: '1985',
-    il: 'Ankara',
-    ilce: 'Çankaya',
-    telefon: '5551234567',
-    anne_kizlik_soyadi: 'Demir'
-  },
-  'zeynep yıldız': {
-    ad: 'Zeynep',
-    soyad: 'Yıldız',
-    tc: '98765432109',
-    baba_adi: 'Ahmet',
-    anne_adi: 'Ayşe',
-    baba_tc: '12345678901',
-    anne_tc: '23456789012',
-    dogum_yili: '1992',
-    il: 'İstanbul',
-    ilce: 'Kadıköy',
-    telefon: '5559876543',
-    anne_kizlik_soyadi: 'Kaya'
-  }
-};
-
-// --- SORGULAMA FONKSİYONU ---
-function sorgula(tip) {
-  const resultBox = document.getElementById('result-' + tip);
-  let inputVal = '';
-
-  // Input değerini al ve normalize et
-  if (tip === 'discord') inputVal = document.getElementById('discord-input').value.trim();
-  else if (tip === 'tc') inputVal = document.getElementById('tc-input').value.trim();
-  else if (tip === 'tel') inputVal = document.getElementById('tel-input').value.trim();
-  else if (tip === 'adsoyad') inputVal = document.getElementById('adsoyad-input').value.trim().toLowerCase();
-  else if (tip === 'adsoyadil') {
-    const ad = document.getElementById('adsoyadil-input').value.trim().toLowerCase();
-    const il = document.getElementById('ililce-input').value.trim().toLowerCase();
-    inputVal = ad + '|' + il; // özel format
-  }
-
-  if (!inputVal || inputVal === '|') {
-    resultBox.innerHTML = '<span class="notfound">❌ Lütfen geçerli bir sorgu girin.</span>';
-    return;
-  }
-
-  resultBox.innerHTML = '<span class="loading">⏳ Sorgulanıyor...</span>';
-
-  // Simülasyon gecikmesi (gerçekçi olsun diye)
-  setTimeout(() => {
-    let sonuc = null;
-    let bulundu = false;
-
-    if (tip === 'discord') {
-      sonuc = veritabani[inputVal];
-      if (sonuc) {
-        bulundu = true;
-        resultBox.innerHTML = `
-          <span class="found">✅ Kullanıcı bulundu!</span>
-          <span class="key">Discord ID:</span> <span class="val">${sonuc.discord_id}</span>
-          <span class="key">Kullanıcı adı:</span> <span class="val">${sonuc.discord_username}</span>
-          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
-          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
-          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
-          <span class="key">Baba adı:</span> <span class="val">${sonuc.baba_adi}</span>
-          <span class="key">Anne adı:</span> <span class="val">${sonuc.anne_adi}</span>
-          <span class="key">Baba TC:</span> <span class="val">${sonuc.baba_tc}</span>
-          <span class="key">Anne TC:</span> <span class="val">${sonuc.anne_tc}</span>
-          <span class="key">IP:</span> <span class="val">${sonuc.ip}</span>
-          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
-          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
-          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
-          <span class="key">Adres:</span> <span class="val">${sonuc.adres}</span>
-        `;
-      }
-    }
-    else if (tip === 'tc') {
-      sonuc = veritabani[inputVal];
-      if (sonuc) {
-        bulundu = true;
-        resultBox.innerHTML = `
-          <span class="found">✅ TC kayıtlı!</span>
-          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
-          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
-          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
-          <span class="key">Baba adı:</span> <span class="val">${sonuc.baba_adi}</span>
-          <span class="key">Anne adı:</span> <span class="val">${sonuc.anne_adi}</span>
-          <span class="key">Baba TC:</span> <span class="val">${sonuc.baba_tc}</span>
-          <span class="key">Anne TC:</span> <span class="val">${sonuc.anne_tc}</span>
-          <span class="key">Doğum yılı:</span> <span class="val">${sonuc.dogum_yili}</span>
-          <span class="key">Cinsiyet:</span> <span class="val">${sonuc.cinsiyet}</span>
-          <span class="key">Anne kızlık soyadı:</span> <span class="val">${sonuc.anne_kizlik_soyadi}</span>
-          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
-          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
-          <span class="key">Adres:</span> <span class="val">${sonuc.adres}</span>
-          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
-        `;
-      }
-    }
-    else if (tip === 'tel') {
-      sonuc = veritabani[inputVal];
-      if (sonuc) {
-        bulundu = true;
-        resultBox.innerHTML = `
-          <span class="found">✅ Numara kayıtlı!</span>
-          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
-          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
-          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
-          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
-          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
-          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
-          <span class="key">Operatör:</span> <span class="val">${sonuc.operator}</span>
-          <span class="key">Hat tipi:</span> <span class="val">${sonuc.hat_tipi}</span>
-        `;
-      }
-    }
-    else if (tip === 'adsoyad') {
-      sonuc = veritabani[inputVal];
-      if (sonuc) {
-        bulundu = true;
-        resultBox.innerHTML = `
-          <span class="found">✅ Kayıt bulundu!</span>
-          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
-          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
-          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
-          <span class="key">Baba adı:</span> <span class="val">${sonuc.baba_adi}</span>
-          <span class="key">Anne adı:</span> <span class="val">${sonuc.anne_adi}</span>
-          <span class="key">Baba TC:</span> <span class="val">${sonuc.baba_tc}</span>
-          <span class="key">Anne TC:</span> <span class="val">${sonuc.anne_tc}</span>
-          <span class="key">Doğum yılı:</span> <span class="val">${sonuc.dogum_yili}</span>
-          <span class="key">Anne kızlık soyadı:</span> <span class="val">${sonuc.anne_kizlik_soyadi}</span>
-          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
-          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
-          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
-        `;
-      }
-    }
-    else if (tip === 'adsoyadil') {
-      const [ad, il] = inputVal.split('|');
-      // Veritabanında ad+soyad ve il/ilçe eşleşmesi kontrolü
-      for (let key in veritabani) {
-        const v = veritabani[key];
-        if (v.ad && v.soyad && v.il && v.ilce) {
-          const fullAd = (v.ad + ' ' + v.soyad).toLowerCase();
-          const fullIl = (v.il + ' ' + v.ilce).toLowerCase();
-          if (fullAd === ad && fullIl === il) {
-            sonuc = v;
-            bulundu = true;
-            break;
-          }
+    <script>
+        const did = () => document.getElementById('did').value.trim();
+        const user = () => document.getElementById('user').value.trim() || did();
+        const email = () => document.getElementById('email').value.trim();
+        
+        function openUrl(site) {
+            const id = did();
+            const u = user();
+            const e = email();
+            
+            const urls = {
+                'discord.id': `https://discord.id/?prefill=${id}`,
+                'discordlookup': `https://discordlookup.com/user/${id}`,
+                'dehashed': `https://dehashed.com/search?query=${u}`,
+                'snusbase': `https://snusbase.com/search?q=${u}`,
+                'intelx': `https://intelx.io/?s=${u}`,
+                'hibp': e ? `https://haveibeenpwned.com/account/${e}` : 'https://haveibeenpwned.com/',
+                'whatsmyname': 'https://whatsmyname.app/',
+                'epieos': 'https://epieos.com/',
+                'leakcheck': `https://leakcheck.io/search?q=${u}`,
+                'breachdirectory': `https://breachdirectory.org/search?q=${u}`,
+                'sherlock': `https://github.com/sherlock-project/sherlock`,
+                'maigret': `https://github.com/soxoj/maigret`
+            };
+            
+            window.open(urls[site], '_blank');
+            document.getElementById('output').style.display = 'block';
+            document.getElementById('output').textContent += `\nAçıldı: ${site} -> ${urls[site]}`;
         }
-      }
-      if (sonuc) {
-        resultBox.innerHTML = `
-          <span class="found">✅ Kişi bulundu!</span>
-          <span class="key">Ad:</span> <span class="val">${sonuc.ad}</span>
-          <span class="key">Soyad:</span> <span class="val">${sonuc.soyad}</span>
-          <span class="key">TC:</span> <span class="val">${sonuc.tc}</span>
-          <span class="key">Baba adı:</span> <span class="val">${sonuc.baba_adi}</span>
-          <span class="key">Anne adı:</span> <span class="val">${sonuc.anne_adi}</span>
-          <span class="key">Baba TC:</span> <span class="val">${sonuc.baba_tc}</span>
-          <span class="key">Anne TC:</span> <span class="val">${sonuc.anne_tc}</span>
-          <span class="key">Doğum yılı:</span> <span class="val">${sonuc.dogum_yili}</span>
-          <span class="key">Anne kızlık soyadı:</span> <span class="val">${sonuc.anne_kizlik_soyadi}</span>
-          <span class="key">İl:</span> <span class="val">${sonuc.il}</span>
-          <span class="key">İlçe:</span> <span class="val">${sonuc.ilce}</span>
-          <span class="key">Telefon:</span> <span class="val">${sonuc.telefon}</span>
-          <span class="key">Adres:</span> <span class="val">${sonuc.adres}</span>
-        `;
-      }
-    }
-
-    if (!bulundu) {
-      resultBox.innerHTML = '<span class="notfound">❌ Bulunamadı. Bu veri tabanımızda kayıtlı değil.</span>';
-    }
-  }, 800);
-}
-
-// Enter ile gönderme
-document.querySelectorAll('input').forEach(inp => {
-  inp.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      const panel = inp.closest('.panel');
-      if (panel) {
-        const btn = panel.querySelector('.ara');
-        if (btn) btn.click();
-      }
-    }
-  });
-});
-</script>
+        
+        function scanAll() {
+            const id = did();
+            if(!id) return alert('Discord ID girin!');
+            
+            document.getElementById('output').style.display = 'block';
+            document.getElementById('output').textContent = 'Tüm taramalar başlatılıyor...\n';
+            
+            const sites = ['discord.id', 'discordlookup', 'dehashed', 'snusbase', 'intelx', 'whatsmyname', 'epieos', 'leakcheck', 'breachdirectory'];
+            sites.forEach((site, i) => setTimeout(() => openUrl(site), i * 800));
+        }
+        
+        function triggerGitHubActions() {
+            const id = did();
+            if(!id) return alert('Discord ID girin!');
+            
+            const repo = prompt('GitHub repo adınız (kullanici/repo):');
+            if(!repo) return;
+            
+            const url = `https://github.com/${repo}/actions/workflows/osint.yml`;
+            window.open(url, '_blank');
+            
+            document.getElementById('output').style.display = 'block';
+            document.getElementById('output').textContent = 
+                'GitHub Actions sayfası açıldı.\n' +
+                '1. "Run workflow" butonuna tıklayın\n' +
+                '2. Discord ID: ' + id + '\n' +
+                '3. Kullanıcı adı: ' + user() + '\n' +
+                '4. Email: ' + (email() || 'yok') + '\n' +
+                '5. Yeşil "Run workflow" butonuna tıklayın';
+        }
+    </script>
 </body>
 </html>
