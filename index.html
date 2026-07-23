@@ -1,109 +1,200 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSINT PANEL - GitHub Actions</title>
+    <title>Discord OSINT - Çalışan Sürüm</title>
     <style>
-        body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, sans-serif; padding: 20px; }
-        h1 { color: #58a6ff; text-align: center; }
-        input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #30363d; background: #161b22; color: #fff; font-size: 16px; }
-        button { background: #238636; cursor: pointer; font-weight: bold; }
-        button:hover { background: #2ea043; }
-        button.red { background: #da3633; }
-        button.blue { background: #1f6feb; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
-        .grid button { font-size: 13px; padding: 10px; }
-        #output { background: #161b22; padding: 15px; border-radius: 8px; margin-top: 15px; max-height: 300px; overflow-y: auto; font-size: 13px; white-space: pre-wrap; display: none; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#000; color:#0f0; font-family:monospace; padding:10px; }
+        .box { max-width:500px; margin:0 auto; }
+        h1 { text-align:center; color:#f00; margin:10px 0; font-size:22px; }
+        input, button, select { width:100%; padding:14px; margin:5px 0; background:#111; border:1px solid #333; color:#0f0; font-size:15px; border-radius:5px; font-family:monospace; }
+        button { background:#c00; color:#fff; font-weight:bold; cursor:pointer; border:none; }
+        button.g { background:#060; }
+        button.b { background:#006; }
+        button.y { background:#660; }
+        pre { background:#0a0a0a; padding:15px; margin-top:10px; border-radius:5px; max-height:400px; overflow:auto; font-size:12px; white-space:pre-wrap; display:none; border:1px solid #333; }
+        .row { display:flex; gap:5px; }
+        .row button { flex:1; font-size:12px; padding:10px; }
+        .tag { color:#ff0; }
+        .found { color:#0f0; }
+        .leak { color:#f00; }
     </style>
 </head>
 <body>
-    <h1>🔍 DISCORD OSINT PANEL</h1>
+<div class="box">
+    <h1>🔍 OSINT V4</h1>
     
-    <input type="text" id="did" placeholder="Discord ID girin" inputmode="numeric">
-    <input type="text" id="user" placeholder="Kullanıcı adı (varsa)">
-    <input type="text" id="email" placeholder="Email (varsa)">
+    <input type="text" id="did" placeholder="Discord ID (örn: 123456789012345678)" inputmode="numeric" autofocus>
     
-    <button onclick="scanAll()">🚀 TÜM TARAMALARI BAŞLAT</button>
-    <button class="blue" onclick="triggerGitHubActions()">⚡ GitHub Actions ile Tara</button>
+    <button onclick="go()">🚀 TARAMA BAŞLAT</button>
     
-    <div class="grid">
-        <button onclick="openUrl('discord.id')">Discord.id</button>
-        <button onclick="openUrl('discordlookup')">DiscordLookup</button>
-        <button onclick="openUrl('dehashed')">Dehashed</button>
-        <button onclick="openUrl('snusbase')">Snusbase</button>
-        <button onclick="openUrl('intelx')">IntelX</button>
-        <button onclick="openUrl('hibp')">HIBP</button>
-        <button onclick="openUrl('whatsmyname')">WhatsMyName</button>
-        <button onclick="openUrl('epieos')">Epieos</button>
-        <button onclick="openUrl('leakcheck')">LeakCheck</button>
-        <button onclick="openUrl('breachdirectory')">BreachDirectory</button>
-        <button onclick="openUrl('sherlock')">Sherlock</button>
-        <button onclick="openUrl('maigret')">Maigret</button>
+    <div class="row">
+        <button class="g" onclick="discordAPI()">📋 Discord API</button>
+        <button class="g" onclick="discordLookup()">🔍 Lookup</button>
+    </div>
+    <div class="row">
+        <button class="b" onclick="openSite('dehashed')">💀 Dehashed</button>
+        <button class="b" onclick="openSite('snusbase')">💀 Snusbase</button>
+        <button class="b" onclick="openSite('intelx')">💀 IntelX</button>
+    </div>
+    <div class="row">
+        <button class="y" onclick="openSite('whatsmyname')">🌐 WhatsMyName</button>
+        <button class="y" onclick="openSite('epieos')">📧 Epieos</button>
+        <button class="y" onclick="openSite('leakcheck')">📋 LeakCheck</button>
+    </div>
+    <div class="row">
+        <button onclick="openSite('hibp')">🔐 HIBP</button>
+        <button onclick="openSite('breachdir')">📂 BreachDir</button>
+        <button onclick="checkIP()">🌍 IP Sorgula</button>
     </div>
     
-    <div id="output"></div>
+    <pre id="out"></pre>
+</div>
 
-    <script>
-        const did = () => document.getElementById('did').value.trim();
-        const user = () => document.getElementById('user').value.trim() || did();
-        const email = () => document.getElementById('email').value.trim();
-        
-        function openUrl(site) {
-            const id = did();
-            const u = user();
-            const e = email();
+<script>
+const $ = id => document.getElementById(id);
+const did = () => $('did').value.trim();
+
+function show(text) {
+    $('out').style.display = 'block';
+    $('out').textContent = text;
+}
+
+async function go() {
+    const id = did();
+    if(!id || id.length < 17) { show('❌ Geçerli Discord ID girin!'); return; }
+    
+    show('⏳ Taranıyor...\n');
+    
+    let result = '══════════════════════════════\n';
+    result += '    DISCORD OSINT TARAMASI\n';
+    result += '══════════════════════════════\n\n';
+    result += `🎯 Hedef ID: ${id}\n`;
+    result += `📅 Zaman: ${new Date().toLocaleString('tr-TR')}\n\n`;
+    
+    // Discord.id API
+    try {
+        const r = await fetch(`https://discord.id/api/v1/user/${id}`);
+        if(r.ok) {
+            const d = await r.json();
+            const u = d.username || '?';
             
-            const urls = {
-                'discord.id': `https://discord.id/?prefill=${id}`,
-                'discordlookup': `https://discordlookup.com/user/${id}`,
-                'dehashed': `https://dehashed.com/search?query=${u}`,
-                'snusbase': `https://snusbase.com/search?q=${u}`,
-                'intelx': `https://intelx.io/?s=${u}`,
-                'hibp': e ? `https://haveibeenpwned.com/account/${e}` : 'https://haveibeenpwned.com/',
-                'whatsmyname': 'https://whatsmyname.app/',
-                'epieos': 'https://epieos.com/',
-                'leakcheck': `https://leakcheck.io/search?q=${u}`,
-                'breachdirectory': `https://breachdirectory.org/search?q=${u}`,
-                'sherlock': `https://github.com/sherlock-project/sherlock`,
-                'maigret': `https://github.com/soxoj/maigret`
-            };
+            result += '─── PROFİL BİLGİSİ ───\n';
+            result += `👤 Kullanıcı: ${d.username}#${d.discriminator}\n`;
+            result += `🆔 ID: ${d.id}\n`;
+            result += `🖼 Avatar: ${d.avatar_url || 'Yok'}\n`;
+            if(d.flags) result += `🏷 Rozetler: ${d.flags}\n`;
+            result += '\n';
             
-            window.open(urls[site], '_blank');
-            document.getElementById('output').style.display = 'block';
-            document.getElementById('output').textContent += `\nAçıldı: ${site} -> ${urls[site]}`;
+            result += '─── SIZINTI VERİTABANLARI (Tıkla) ───\n';
+            result += `🔗 Dehashed: https://dehashed.com/search?query=${u}\n`;
+            result += `🔗 Snusbase: https://snusbase.com/search?q=${u}\n`;
+            result += `🔗 IntelX: https://intelx.io/?s=${u}\n`;
+            result += `🔗 LeakCheck: https://leakcheck.io/search?q=${u}\n`;
+            result += `🔗 BreachDirectory: https://breachdirectory.org/search?q=${u}\n\n`;
+            
+            result += '─── SOSYAL MEDYA (Tıkla) ───\n';
+            result += `🔗 GitHub: https://github.com/${u}\n`;
+            result += `🔗 Twitter/X: https://x.com/${u}\n`;
+            result += `🔗 Instagram: https://instagram.com/${u}\n`;
+            result += `🔗 Reddit: https://reddit.com/user/${u}\n`;
+            result += `🔗 Telegram: https://t.me/${u}\n`;
+            result += `🔗 Steam: https://steamcommunity.com/id/${u}\n`;
+            result += `🔗 YouTube: https://youtube.com/@${u}\n`;
+            result += `🔗 TikTok: https://tiktok.com/@${u}\n`;
+            result += `🔗 Twitch: https://twitch.tv/${u}\n`;
+            result += `🔗 Spotify: https://open.spotify.com/user/${u}\n`;
+            result += `🔗 Pinterest: https://pinterest.com/${u}\n`;
+            result += `🔗 Roblox: https://roblox.com/search/users?keyword=${u}\n`;
+            result += `🔗 Pastebin: https://pastebin.com/u/${u}\n`;
+            result += `🔗 SoundCloud: https://soundcloud.com/${u}\n\n`;
+            
+            result += '─── DİSCORD LOOKUP ───\n';
+            result += `🔗 https://discordlookup.com/user/${id}\n`;
+            result += `🔗 https://discord.id/?prefill=${id}\n\n`;
+            
+            result += '─── EMAİL/WHOİS ARAÇLARI ───\n';
+            result += `🔗 Epieos: https://epieos.com/\n`;
+            result += `🔗 WhatsMyName: https://whatsmyname.app/\n`;
+            result += `🔗 That's Them: https://thatsthem.com/\n`;
+            result += `🔗 OSINT Industries: https://osint.industries/\n`;
+            
+            show(result);
+            
+            // Otomatik aç
+            window.open(`https://discordlookup.com/user/${id}`, '_blank');
+            setTimeout(() => window.open(`https://discord.id/?prefill=${id}`, '_blank'), 500);
+            setTimeout(() => window.open(`https://whatsmyname.app/`, '_blank'), 1000);
+            
+        } else {
+            show('❌ Kullanıcı bulunamadı. ID doğru mu?');
         }
+    } catch(e) {
+        show('❌ Bağlantı hatası: ' + e.message);
+    }
+}
+
+function discordAPI() {
+    const id = did();
+    if(!id) return;
+    window.open(`https://discord.id/?prefill=${id}`, '_blank');
+    show(`Discord.id açıldı.\nID: ${id}`);
+}
+
+function discordLookup() {
+    const id = did();
+    if(!id) return;
+    window.open(`https://discordlookup.com/user/${id}`, '_blank');
+    show(`DiscordLookup açıldı.\nID: ${id}`);
+}
+
+function openSite(site) {
+    const id = did();
+    const u = id || 'ara';
+    
+    const urls = {
+        dehashed: `https://dehashed.com/search?query=${u}`,
+        snusbase: `https://snusbase.com/search?q=${u}`,
+        intelx: `https://intelx.io/?s=${u}`,
+        whatsmyname: 'https://whatsmyname.app/',
+        epieos: 'https://epieos.com/',
+        leakcheck: `https://leakcheck.io/search?q=${u}`,
+        hibp: 'https://haveibeenpwned.com/',
+        breachdir: `https://breachdirectory.org/search?q=${u}`
+    };
+    
+    if(urls[site]) {
+        window.open(urls[site], '_blank');
+        show(`✅ ${site} açıldı!\n🔗 ${urls[site]}`);
+    }
+}
+
+async function checkIP() {
+    show('⏳ IP sorgulanıyor...');
+    try {
+        const ipR = await fetch('https://api.ipify.org?format=json');
+        const ipD = await ipR.json();
+        const geoR = await fetch(`http://ip-api.com/json/${ipD.ip}`);
+        const geo = await geoR.json();
         
-        function scanAll() {
-            const id = did();
-            if(!id) return alert('Discord ID girin!');
-            
-            document.getElementById('output').style.display = 'block';
-            document.getElementById('output').textContent = 'Tüm taramalar başlatılıyor...\n';
-            
-            const sites = ['discord.id', 'discordlookup', 'dehashed', 'snusbase', 'intelx', 'whatsmyname', 'epieos', 'leakcheck', 'breachdirectory'];
-            sites.forEach((site, i) => setTimeout(() => openUrl(site), i * 800));
-        }
+        let r = '─── IP KONUM ───\n';
+        r += `🌐 IP: ${ipD.ip}\n`;
+        r += `🏳 Ülke: ${geo.country} (${geo.countryCode})\n`;
+        r += `🏙 Şehir: ${geo.city}\n`;
+        r += `📍 Bölge: ${geo.regionName}\n`;
+        r += `📮 Posta Kodu: ${geo.zip}\n`;
+        r += `🗺 Koordinat: ${geo.lat}, ${geo.lon}\n`;
+        r += `📡 ISP: ${geo.isp}\n`;
+        r += `🏢 Org: ${geo.org}\n`;
+        r += `⏰ Saat Dilimi: ${geo.timezone}\n`;
         
-        function triggerGitHubActions() {
-            const id = did();
-            if(!id) return alert('Discord ID girin!');
-            
-            const repo = prompt('GitHub repo adınız (kullanici/repo):');
-            if(!repo) return;
-            
-            const url = `https://github.com/${repo}/actions/workflows/osint.yml`;
-            window.open(url, '_blank');
-            
-            document.getElementById('output').style.display = 'block';
-            document.getElementById('output').textContent = 
-                'GitHub Actions sayfası açıldı.\n' +
-                '1. "Run workflow" butonuna tıklayın\n' +
-                '2. Discord ID: ' + id + '\n' +
-                '3. Kullanıcı adı: ' + user() + '\n' +
-                '4. Email: ' + (email() || 'yok') + '\n' +
-                '5. Yeşil "Run workflow" butonuna tıklayın';
-        }
-    </script>
+        show(r);
+    } catch(e) {
+        show('❌ IP hatası: ' + e.message);
+    }
+}
+</script>
 </body>
 </html>
